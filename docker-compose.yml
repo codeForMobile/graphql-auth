@@ -25,3 +25,4 @@ services:
       DATABASE_URL: postgres://postgres@postgres/webapp_dev
       PORT: 5001
       NODE_ENV: development
+      JWT_SECRET: very-secret-key
