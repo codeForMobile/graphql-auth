@@ -1,11 +1,10 @@
 import { GraphQLError } from 'graphql';
-import jwt from 'jsonwebtoken'
 import { GqlResolvers } from '../../generated/graphql';
 import db, { genId } from '../../modules/db';
 import { DateTime } from 'luxon'
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcrypt'
-import invariant from 'invariant';
+import Auth from '../../modules/auth';
 
 const SALT_ROUNDS = process.env.NODE_ENV === 'test' ? 1 : 10
 const authResolvers: GqlResolvers = {
@@ -68,11 +67,21 @@ const authResolvers: GqlResolvers = {
       ])
 
       // Generate authToken
-      invariant(process.env.JWT_SECRET, 'JWT_SECRET not set')
-      const authToken = jwt.sign({ userId: user.id}, process.env.JWT_SECRET)
-      return { authToken }
+      return { authToken: Auth.createAuthToken(user)}
     },
-    // signIn: () => {},
+
+    signIn: async (_, {email, password}) => {
+
+      const user = await db.user.findUnique({where: {email}})
+      if (!user) throw new GraphQLError('Email/pwd is invalid')
+
+      //verify pwd
+      const validPwd = await bcrypt.compare(password, user.passwordHash)
+      if (!validPwd) throw new GraphQLError('Email/pwd is invalid')
+
+      return { authToken: Auth.createAuthToken(user)}
+      
+    },
   },
 };
 
