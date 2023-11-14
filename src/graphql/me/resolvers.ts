@@ -1,9 +1,12 @@
 import { GqlResolvers } from '../../generated/graphql';
+import { GqlContext } from '../types';
 
-const meResolvers: GqlResolvers = {
+const meResolvers: GqlResolvers<GqlContext> = {
   Query: {
     // TODO
-    me: () => null,
+    me: (_, __, {currentUser}) => {
+      return currentUser;
+    },
   },
 };
 
